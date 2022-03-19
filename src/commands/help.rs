@@ -11,6 +11,7 @@ use crate::commands::say::SAY_COMMAND;
 use crate::commands::rps::RPS_COMMAND;
 use crate::commands::cat::CAT_COMMAND;
 use crate::commands::flag::FLAG_COMMAND;
+use crate::commands::meme::MEME_COMMAND;
 use serenity::model::channel::Embed;
 use serenity::utils::Colour;
 use serenity::http::CacheHttp;
@@ -42,5 +43,5 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[group]
-#[commands(test, help, say, rps, cat, flag)]
+#[commands(test, help, say, rps, cat, flag, meme)]
 struct Commands;
