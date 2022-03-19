@@ -17,6 +17,8 @@ use serde::Deserialize;
 use std::error::Error;
 use std::io::BufReader;
 use serde_json::Value;
+use songbird::SerenityInit;
+use serenity::client::bridge::gateway::GatewayIntents;
 
 #[derive(Deserialize, Debug)]
 struct Jstruct {
@@ -41,6 +43,7 @@ impl EventHandler for Handler {
 }
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt::init();
     let filestring = fs::read_to_string("bobit.json");
     let out: Value = serde_json::from_str(&filestring.unwrap()).unwrap();
     let token = out["token"].as_str().unwrap();
@@ -55,9 +58,18 @@ async fn main() {
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
     let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix(out["prefix"].as_str().unwrap())).group(&COMMANDS_GROUP);
-    let mut client = Client::builder(&token).framework(framework).event_handler(Handler).await.expect("Err creating client");
+    let mut client = Client::builder(&token)
+        .event_handler(Handler)
+        .framework(framework)
+        .intents(GatewayIntents::DIRECT_MESSAGES | GatewayIntents::DIRECT_MESSAGE_REACTIONS | GatewayIntents::DIRECT_MESSAGE_TYPING | GatewayIntents::GUILDS | GatewayIntents::GUILD_BANS | GatewayIntents::GUILD_EMOJIS | GatewayIntents::GUILD_INTEGRATIONS | GatewayIntents::GUILD_INVITES | GatewayIntents::GUILD_MEMBERS | GatewayIntents::GUILD_MESSAGES | GatewayIntents::GUILD_MESSAGE_REACTIONS | GatewayIntents::GUILD_MESSAGE_TYPING | GatewayIntents::GUILD_PRESENCES | GatewayIntents::GUILD_SCHEDULED_EVENTS | GatewayIntents::GUILD_VOICE_STATES | GatewayIntents::GUILD_WEBHOOKS)
+        .register_songbird()
+        .await
+        .expect("Err creating client");
 
-    if let Err(why) = client.start().await
-        {println!("Client error: {:?}", why);}
+    tokio::spawn(async move {
+        let _ = client.start().await.map_err(|why| println!("Client ended: {:?}", why));
+    });
 
+    tokio::signal::ctrl_c().await;
+    println!("Received Ctrl-C, shutting down.");
 }

@@ -5,4 +5,5 @@ pub mod rps;
 pub mod cat;
 pub mod flag;
 pub mod meme;
+pub mod music;
 pub struct Handler;

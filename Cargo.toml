@@ -6,10 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serenity = {version = "0.10.10", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "cache", "framework", "standard_framework"]}
+serenity = {version = "0.10.10", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "cache", "framework", "standard_framework", "voice"]}
 serde_json = "1.0.79"
-tokio = {version = "1.17.0", features = ["macros", "rt-multi-thread"] }
+tokio = {version = "1.17.0", features = ["macros", "rt-multi-thread", "signal"] }
 rand = "0.8.5"
 reqwest = "0.11.10"
 image = "0.24.1"
 serde = "1.0.136"
+youtube_dl = "0.7.0"
+songbird = {version = "0.2.2", features = ["builtin-queue"]}
+tracing = "0.1"
+tracing-subscriber = "0.2"
+tracing-futures = "0.2"
