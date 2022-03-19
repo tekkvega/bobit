@@ -131,7 +131,6 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
             },
         );
 
-        let send_http = ctx.http.clone();
 
     } else {
         check_msg(
