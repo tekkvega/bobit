@@ -13,12 +13,14 @@ use std::path::Path;
 use std::ffi::OsStr;
 use std::fs;
 use serenity::framework::standard::{Args, Delimiter};
+use serenity::utils::Colour;
 
 #[command]
 #[description("Send a picture of a cat :3")]
 #[help_available(true)]
 async fn cat(ctx: &Context, msg: &Message) -> CommandResult{
     let mut link = "https://cataas.com/cat".to_string();
+
     let mut args = Args::new(&msg.content, &[Delimiter::Single(' ')]);
     if args.len() >= 2 {
         args.single::<String>().unwrap();
@@ -29,9 +31,15 @@ async fn cat(ctx: &Context, msg: &Message) -> CommandResult{
      .await?
      .bytes();
     image::load_from_memory(&img_bytes.await.unwrap().to_vec())?.save(Path::new("./cat.jpg"));
-
     msg.channel_id.send_message(&ctx.http, |m| {
-        m.content("cute cat for you :3").add_file("cat.jpg")
+        m.add_file("cat.jpg");
+        m.embed(|e| {
+            e.title("Cat as a service")
+                .colour(Colour::from_rgb(0, 251, 255))
+                .url("https://cataas.com/cat")
+                .description("Here a cute cat for you :3")
+                .image("attachment://cat.jpg")
+            })
     }).await;
     fs::remove_file("cat.jpg")?;
     Ok(())

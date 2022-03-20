@@ -30,9 +30,14 @@ async fn meme(ctx: &Context, msg: &Message) -> CommandResult{
     let subreddit = v["subreddit"].as_str().unwrap();
     let url = v["url"].as_str().unwrap();
     msg.channel_id.send_message(&ctx.http, |m| {
-        m.content(format!("Here's your meme!\n<{}>\n posted in: {}\n**{}**\n{}", postLink, subreddit, title, url))
-    }).await;
-    fs::remove_file("meme.jpg")?;
+        m.embed(|e| {
+            e.title(&title)
+                .colour(Colour::from_rgb(0, 251, 255))
+                .url(&postLink)
+                .description(&subreddit)
+                .image(&url)
+            })
 
+    }).await;
     Ok(())
 }
