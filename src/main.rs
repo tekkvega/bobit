@@ -22,6 +22,7 @@ use serenity::client::bridge::gateway::GatewayIntents;
 use crate::commands::help::COMMANDS_GROUP_OPTIONS;
 use serenity::utils::Colour;
 use serenity::client::TokenComponents;
+use serenity::model::prelude::Activity;
 
 #[derive(Deserialize, Debug)]
 struct Jstruct {
@@ -60,8 +61,11 @@ impl EventHandler for Handler {
         }
     }
 
-    async fn ready(&self, _: Context, ready: Ready) {
+    async fn ready(&self, ctx: Context, ready: Ready) {
         println!("{} is connected!", ready.user.name);
+        let filestring = fs::read_to_string("bobit.json");
+        let out: Value = serde_json::from_str(&filestring.unwrap()).unwrap();
+        &ctx.set_activity(Activity::playing(format!("Prefix: {}", out["prefix"].as_str().unwrap()))).await;
     }
 
 }
