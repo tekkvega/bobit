@@ -12,6 +12,7 @@ use crate::commands::rps::RPS_COMMAND;
 use crate::commands::cat::CAT_COMMAND;
 use crate::commands::flag::FLAG_COMMAND;
 use crate::commands::meme::MEME_COMMAND;
+use crate::commands::pfp::PFP_COMMAND;
 use crate::commands::music::*;
 use serenity::model::channel::Embed;
 use serenity::utils::Colour;
@@ -72,9 +73,9 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[group]
-#[commands(test, help, say, rps, cat, flag, meme)]
+#[commands(test, help, say, rps, cat, flag, meme, pfp)]
 struct Commands;
 
 #[group]
-#[commands(deafen, join, leave, mute, play, skip, stop, undeafen, unmute)]
+#[commands(deafen, join, leave, mute, play, queue, skip, stop, undeafen, unmute)]
 struct Music;

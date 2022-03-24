@@ -18,3 +18,4 @@ songbird = {version = "0.2.2", features = ["builtin-queue"]}
 tracing = "0.1"
 tracing-subscriber = "0.2"
 tracing-futures = "0.2"
+hhmmss = "0.1.0"

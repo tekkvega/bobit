@@ -20,6 +20,7 @@ use serde_json::Value;
 use songbird::SerenityInit;
 use serenity::client::bridge::gateway::GatewayIntents;
 use crate::commands::help::COMMANDS_GROUP_OPTIONS;
+use crate::commands::help::MUSIC_GROUP;
 use serenity::utils::Colour;
 use serenity::client::TokenComponents;
 use serenity::model::prelude::Activity;
@@ -38,27 +39,6 @@ impl EventHandler for Handler {
                 println!("Error sending message: {:?}", why);
             }
         }
-        if msg.mentions.len() > 0 && &msg.mentions[0].id == &ctx.http.get_current_user().await.unwrap().id {
-            msg
-            .author.dm(&ctx.http, |m| {
-                m.content("Here are all the commands for you :)")
-                .embed(|e| {
-                    e.title("Help\nMy prefix is \"&\"")
-                        .colour(Colour::from_rgb(0, 251, 255))
-                        .description("All commands available");
-                        for command in COMMANDS_GROUP_OPTIONS.commands.to_vec().iter() {
-                            let desc = command.options.desc;
-                            let name = command.options.names;
-                            e.field(name.to_vec()[0].to_string(), desc.unwrap().to_string(), true);
-                        }
-                        e.field("ping", "pong! (no prefix)", true);
-                        e.field("help music", "Shows all music commands", true);
-                        e.footer(|f| f.text("By Mott's Applesauce"))
-                    })
-            })
-            .await;
-            msg.channel_id.say(&ctx.http, format!("Command list sent to user: {}", msg.author.to_string())).await;
-        }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
@@ -68,6 +48,7 @@ impl EventHandler for Handler {
         &ctx.set_activity(Activity::playing(format!("Prefix: {}", out["prefix"].as_str().unwrap()))).await;
     }
 
+    
 }
 #[tokio::main]
 async fn main() {
@@ -85,7 +66,7 @@ async fn main() {
         },
         Err(why) => panic!("Could not access application info: {:?}", why),
     };
-    let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix(out["prefix"].as_str().unwrap())).group(&COMMANDS_GROUP);
+    let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix(out["prefix"].as_str().unwrap())).group(&COMMANDS_GROUP).group(&MUSIC_GROUP);
     let mut client = Client::builder(&token)
         .event_handler(Handler)
         .framework(framework)

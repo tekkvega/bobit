@@ -39,7 +39,9 @@ use songbird::{
     SerenityInit,
     TrackEvent,
 };
-
+use youtube_dl::YoutubeDl;
+use serenity::utils::Colour;
+use hhmmss::Hhmmss;
 
 #[command]
 #[description("defeans the bot in vc")]
@@ -87,60 +89,60 @@ async fn deafen(ctx: &Context, msg: &Message) -> CommandResult {
 #[help_available(true)]
 async fn join(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild(&ctx.cache).await.unwrap();
-    let guild_id = guild.id;
+        let guild_id = guild.id;
 
-    let channel_id = guild
-        .voice_states
-        .get(&msg.author.id)
-        .and_then(|voice_state| voice_state.channel_id);
+        let channel_id = guild
+            .voice_states
+            .get(&msg.author.id)
+            .and_then(|voice_state| voice_state.channel_id);
 
-    let connect_to = match channel_id {
-        Some(channel) => channel,
-        None => {
-            check_msg(msg.reply(ctx, "Not in a voice channel").await);
+        let connect_to = match channel_id {
+            Some(channel) => channel,
+            None => {
+                check_msg(msg.reply(ctx, "Not in a voice channel").await);
 
-            return Ok(());
-        },
-    };
-
-    let manager = songbird::get(ctx)
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
-
-    let (handle_lock, success) = manager.join(guild_id, connect_to).await;
-
-    if let Ok(_channel) = success {
-        check_msg(
-            msg.channel_id
-                .say(&ctx.http, &format!("Joined {}", connect_to.mention()))
-                .await,
-        );
-
-        let chan_id = msg.channel_id;
-
-        let send_http = ctx.http.clone();
-
-        let mut handle = handle_lock.lock().await;
-
-        handle.add_global_event(
-            Event::Track(TrackEvent::End),
-            TrackEndNotifier {
-                chan_id,
-                http: send_http,
+                return Ok(());
             },
-        );
+        };
+
+        let manager = songbird::get(ctx)
+            .await
+            .expect("Songbird Voice client placed in at initialisation.")
+            .clone();
+
+        let (handle_lock, success) = manager.join(guild_id, connect_to).await;
+
+        if let Ok(_channel) = success {
+            check_msg(
+                msg.channel_id
+                    .say(&ctx.http, &format!("Joined {}", connect_to.mention()))
+                    .await,
+            );
+
+            let chan_id = msg.channel_id;
+
+            let send_http = ctx.http.clone();
+
+            let mut handle = handle_lock.lock().await;
+
+            handle.add_global_event(
+                Event::Track(TrackEvent::End),
+                TrackEndNotifier {
+                    chan_id,
+                    http: send_http,
+                },
+            );
 
 
-    } else {
-        check_msg(
-            msg.channel_id
-                .say(&ctx.http, "Error joining the channel")
-                .await,
-        );
-    }
+        } else {
+            check_msg(
+                msg.channel_id
+                    .say(&ctx.http, "Error joining the channel")
+                    .await,
+            );
+        }
 
-    Ok(())
+        Ok(())
 }
 
 struct TrackEndNotifier {
@@ -252,7 +254,7 @@ impl VoiceEventHandler for SongEndNotifier {
     async fn act(&self, _ctx: &EventContext<'_>) -> Option<Event> {
         check_msg(
             self.chan_id
-                .say(&self.http, "Song faded out completely!")
+                .say(&self.http, "Song ended.")
                 .await,
         );
 
@@ -313,15 +315,41 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         };
 
         handler.enqueue_source(source.into());
+        if handler.queue().len() >= 2 {
+            let play_time = handler.queue().current().unwrap().get_info().await.unwrap().play_time;
+            check_msg(
+                msg.channel_id
+                .send_message(&ctx.http, |m| {
+                    m.embed(|e| {
+                        e.title("Current Queue");
+                        e.colour(Colour::from_rgb(0, 251, 255));
 
-        check_msg(
+                        e.description(format!("Currently Playing \n[{}]({}), {} left", handler.queue().current().unwrap().metadata().title.as_ref().unwrap() , handler.queue().current().unwrap().metadata().source_url.as_ref().unwrap(), (handler.queue().current().unwrap().metadata().duration.unwrap() - std::time::Duration::new(play_time.as_secs(), 0)).hhmmss()));
+                        for n in handler.queue().current_queue().iter()
+                        {
+                            e.field(n.metadata().duration.unwrap().hhmmss(), format!("[{}]({})", n.metadata().title.as_ref().unwrap() , n.metadata().source_url.as_ref().unwrap()), false);
+                        }
+                        e.footer(|f| f.text("By Mott's Applesauce"))
+                    })
+
+                    }).await,
+            );
+        }
+        else {
+            check_msg(
             msg.channel_id
-                .say(
-                    &ctx.http,
-                    format!("Added song to queue: position {}", handler.queue().len()),
-                )
-                .await,
-        );
+            .send_message(&ctx.http, |m| {
+                m.embed(|e| {
+                    e.title("**Now Playing**")
+                        .colour(Colour::from_rgb(0, 251, 255))
+                        .description(format!("[{}]({})", handler.queue().current().unwrap().metadata().title.as_ref().unwrap() , handler.queue().current().unwrap().metadata().source_url.as_ref().unwrap()))
+                })
+
+                }).await,
+            );
+        }
+
+
     } else {
         check_msg(
             msg.channel_id
@@ -330,6 +358,68 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
         );
     }
 
+    Ok(())
+}
+
+#[command]
+#[only_in(guilds)]
+#[description("shows the current queue")]
+#[help_available(true)]
+async fn queue(ctx: &Context, msg: &Message) -> CommandResult {
+    let guild = msg.guild(&ctx.cache).await.unwrap();
+    let guild_id = guild.id;
+
+    let manager = songbird::get(ctx)
+        .await
+        .expect("Songbird Voice client placed in at initialisation.")
+        .clone();
+
+    let handler_lock = match manager.get(guild_id) {
+        Some(handler) => handler,
+        None => {
+            check_msg(msg.reply(ctx, "Not in a voice channel").await);
+
+            return Ok(());
+        },
+    };
+
+    let handler = handler_lock.lock().await;
+
+    if handler.queue().len() >= 1 {
+        let play_time = handler.queue().current().unwrap().get_info().await.unwrap().play_time;
+        check_msg(
+            msg.channel_id
+            .send_message(&ctx.http, |m| {
+                m.embed(|e| {
+                    e.title("Current Queue")
+                        .colour(Colour::from_rgb(0, 251, 255))
+                        .description(format!("**Currently Playing** \n[{}]({}), {} left", handler.queue().current().unwrap().metadata().title.as_ref().unwrap() , handler.queue().current().unwrap().metadata().source_url.as_ref().unwrap(), (handler.queue().current().unwrap().metadata().duration.unwrap() - std::time::Duration::new(play_time.as_secs(), 0)).hhmmss()));
+                    for n in handler.queue().current_queue().iter()
+                    {
+                        e.field(n.metadata().duration.unwrap().hhmmss(), format!("[{}]({})", n.metadata().title.as_ref().unwrap() , n.metadata().source_url.as_ref().unwrap()), false);
+                    }
+                    e.footer(|f| f.text("By Mott's Applesauce"))
+
+                })
+
+                }).await,
+        );
+    }
+    else {
+        check_msg(
+            msg.channel_id
+            .send_message(&ctx.http, |m| {
+                m.embed(|e| {
+                    e.title("Current Queue");
+                    e.colour(Colour::from_rgb(0, 251, 255));
+
+                    e.description("**THE QUEUE IS EMPTY**");
+                    e.footer(|f| f.text("By Mott's Applesauce"))
+                })
+
+                }).await,
+        );
+    }
     Ok(())
 }
 

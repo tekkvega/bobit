@@ -8,7 +8,8 @@ download the the latest artifact file in the **Actions** tab of Github, then cre
 ```
 {
   "token": (bot token here in ""),
-  "prefix": (your choice of the prefix also in "")
+  "prefix": (your choice of the prefix also in ""),
+  "musicData": []
 }
   ```
 

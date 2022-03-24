@@ -6,4 +6,5 @@ pub mod cat;
 pub mod flag;
 pub mod meme;
 pub mod music;
+pub mod pfp;
 pub struct Handler;
