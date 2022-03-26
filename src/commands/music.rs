@@ -325,10 +325,17 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                         e.colour(Colour::from_rgb(0, 251, 255));
 
                         e.description(format!("Currently Playing \n[{}]({}), {} left", handler.queue().current().unwrap().metadata().title.as_ref().unwrap() , handler.queue().current().unwrap().metadata().source_url.as_ref().unwrap(), (handler.queue().current().unwrap().metadata().duration.unwrap() - std::time::Duration::new(play_time.as_secs(), 0)).hhmmss()));
-                        for n in handler.queue().current_queue().iter()
-                        {
-                            e.field(n.metadata().duration.unwrap().hhmmss(), format!("[{}]({})", n.metadata().title.as_ref().unwrap() , n.metadata().source_url.as_ref().unwrap()), false);
+                        if handler.queue().current_queue()[1..].len() >= 2 {
+
+                            for n in handler.queue().current_queue()[1..].iter()
+                            {
+                                e.field(n.metadata().duration.unwrap().hhmmss(), format!("[{}]({})", n.metadata().title.as_ref().unwrap() , n.metadata().source_url.as_ref().unwrap()), false);
+                            }
                         }
+                        else {
+                            e.field("`Queue is empty`", "Use `the play command to add songs`", false);
+                        }
+
                         e.footer(|f| f.text("By Mott's Applesauce"))
                     })
 
@@ -394,10 +401,16 @@ async fn queue(ctx: &Context, msg: &Message) -> CommandResult {
                     e.title("Current Queue")
                         .colour(Colour::from_rgb(0, 251, 255))
                         .description(format!("**Currently Playing** \n[{}]({}), {} left", handler.queue().current().unwrap().metadata().title.as_ref().unwrap() , handler.queue().current().unwrap().metadata().source_url.as_ref().unwrap(), (handler.queue().current().unwrap().metadata().duration.unwrap() - std::time::Duration::new(play_time.as_secs(), 0)).hhmmss()));
-                    for n in handler.queue().current_queue().iter()
-                    {
-                        e.field(n.metadata().duration.unwrap().hhmmss(), format!("[{}]({})", n.metadata().title.as_ref().unwrap() , n.metadata().source_url.as_ref().unwrap()), false);
-                    }
+                        if handler.queue().current_queue()[1..].len() >= 2 {
+
+                            for n in handler.queue().current_queue()[1..].iter()
+                            {
+                                e.field(n.metadata().duration.unwrap().hhmmss(), format!("[{}]({})", n.metadata().title.as_ref().unwrap() , n.metadata().source_url.as_ref().unwrap()), false);
+                            }
+                        }
+                        else {
+                            e.field("`Queue is empty`", "Use `the play command to add songs`", false);
+                        }
                     e.footer(|f| f.text("By Mott's Applesauce"))
 
                 })
