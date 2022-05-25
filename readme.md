@@ -12,4 +12,4 @@ download the the latest artifact file in [**Actions**](https://github.com/tekkve
 }
   ```
 
-then simply just run the bot and ill work, the prefix is `&` if you wanna change it just compile the code yourself with your own prefix
+then simply just run the bot
