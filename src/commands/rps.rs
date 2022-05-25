@@ -47,14 +47,14 @@ async fn rps(ctx: &Context, msg: &Message) -> CommandResult{
     if choice == 0 ||choice == 1 || choice == 2 {
         let botChoice: i8 = rand::thread_rng().gen_range(0..2);
         match botChoice {
-            0 => msg.channel_id.say(&ctx.http, ":fist:").await,
-            1 => msg.channel_id.say(&ctx.http, ":raised_hand:").await,
-            _ => msg.channel_id.say(&ctx.http, ":v:").await
+            0 => msg.reply(&ctx.http, ":fist:"),
+            1 => msg.reply(&ctx.http, ":raised_hand:"),
+            _ => msg.reply(&ctx.http, ":v:")
         };
         match (choice - botChoice + 3) % 3 {
-            1 => msg.channel_id.say(&ctx.http, "I win :) you lost!").await,
-            0 => msg.channel_id.say(&ctx.http, ":| its a tie").await,
-            _ => msg.channel_id.say(&ctx.http, ":( I lost, you win").await
+            1 => msg.reply(&ctx.http, "I win :) you lost!"),
+            0 => msg.reply(&ctx.http, ":| its a tie"),
+            _ => msg.reply(&ctx.http, ":( I lost, you win")
         };
     }
 

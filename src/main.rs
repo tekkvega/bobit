@@ -25,11 +25,13 @@ use serenity::utils::Colour;
 use serenity::client::TokenComponents;
 use serenity::model::prelude::Activity;
 
+
 #[derive(Deserialize, Debug)]
 struct Jstruct {
     fingerprint: String,
     location: String,
 }
+
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -48,7 +50,7 @@ impl EventHandler for Handler {
         &ctx.set_activity(Activity::playing(format!("Prefix: {}", out["prefix"].as_str().unwrap()))).await;
     }
 
-    
+
 }
 #[tokio::main]
 async fn main() {
